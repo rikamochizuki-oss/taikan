@@ -1,21 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 開発用：全ユーザーに読み取りを許可
-    match /gyms/{gymId} {
-      allow read: if true;
-      allow write: if false; // 本番では管理者のみに制限
-    }
-    
-    match /areas/{areaId} {
-      allow read: if true;
-      allow write: if false;
-    }
-    
-    match /sports/{sportId} {
-      allow read: if true;
-      allow write: if false;
+    // 開発環境用：すべての操作を許可（エミュレーター専用）
+    // ⚠️ 警告：本番環境では必ず適切な認証ルールに変更してください
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
-

@@ -4,18 +4,34 @@ import React, { useState } from 'react';
 import { X, Calendar as CalendarIcon, List as ListIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { GymCard } from './GymCard';
+import { useGyms } from '@/hooks/useGyms';
 import { useMockGyms } from '@/hooks/useMockData';
-import type { Gym } from '@/types';
+import type { Gym, SearchConditions } from '@/types';
 
 interface ListScreenProps {
   onBack: () => void;
   onSelectGym: (gym: Gym) => void;
+  searchConditions?: SearchConditions;
 }
 
-export const ListScreen: React.FC<ListScreenProps> = ({ onBack, onSelectGym }) => {
+export const ListScreen: React.FC<ListScreenProps> = ({ onBack, onSelectGym, searchConditions }) => {
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
-    const { gyms } = useMockGyms();
+    
+    // Firebaseからデータを取得（エラー時はモックデータにフォールバック）
+    const { gyms: firebaseGyms, loading, error } = useGyms(searchConditions);
+    const { gyms: mockGyms } = useMockGyms();
+    const gyms = error ? mockGyms : firebaseGyms;
+
+    // デバッグログ
+    console.log('🔍 ListScreen Debug:', { 
+        loading, 
+        error, 
+        firebaseGymsCount: firebaseGyms.length, 
+        mockGymsCount: mockGyms.length,
+        gymsCount: gyms.length,
+        searchConditions
+    });
 
     return (
         <div className="min-h-screen bg-gray-50 pb-24">
@@ -23,7 +39,10 @@ export const ListScreen: React.FC<ListScreenProps> = ({ onBack, onSelectGym }) =
                 <button onClick={onBack} className="p-1 -ml-1 hover:bg-gray-100 rounded-full">
                     <X size={20} className="text-gray-600" />
                 </button>
-                <h2 className="text-base font-bold text-gray-800">検索結果 (20件)</h2>
+                <h2 className="text-base font-bold text-gray-800">
+                    検索結果 ({loading ? '...' : gyms.length}件)
+                    {error && <span className="text-xs text-orange-500 ml-2">(モック)</span>}
+                </h2>
                 <button
                     onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
                     className="flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium text-teal-600 hover:bg-teal-50"
@@ -32,18 +51,39 @@ export const ListScreen: React.FC<ListScreenProps> = ({ onBack, onSelectGym }) =
                     <span>{viewMode === 'list' ? 'カレンダー' : 'リスト'}</span>
                 </button>
             </div>
-            <div className="flex overflow-x-auto px-4 py-3 gap-2 no-scrollbar">
-                 <Badge color="teal">日時: 11/29</Badge>
-                 <Badge color="gray" variant="outline">エリア: 渋谷区</Badge>
-                 <Badge color="gray" variant="outline">バドミントン</Badge>
-            </div>
+            {searchConditions && (searchConditions.date || searchConditions.area || searchConditions.sport || searchConditions.keyword) && (
+                <div className="flex overflow-x-auto px-4 py-3 gap-2 no-scrollbar">
+                    {searchConditions.date && (
+                        <Badge color="teal">日時: {searchConditions.date}</Badge>
+                    )}
+                    {searchConditions.area && (
+                        <Badge color="gray" variant="outline">エリア: {searchConditions.area}</Badge>
+                    )}
+                    {searchConditions.sport && (
+                        <Badge color="gray" variant="outline">{searchConditions.sport}</Badge>
+                    )}
+                    {searchConditions.keyword && (
+                        <Badge color="gray" variant="outline">キーワード: {searchConditions.keyword}</Badge>
+                    )}
+                </div>
+            )}
             <div className="px-4">
-                {viewMode === 'list' ? (
+                {loading ? (
+                    <div className="flex justify-center items-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+                    </div>
+                ) : viewMode === 'list' ? (
                     <div className="flex flex-col">
                         <p className="text-xs text-gray-500 mb-3 ml-1">現在地から近い順</p>
-                        {gyms.map(gym => (
-                            <GymCard key={gym.id} data={gym} onClick={() => onSelectGym(gym)} />
-                        ))}
+                        {gyms.length > 0 ? (
+                            gyms.map(gym => (
+                                <GymCard key={gym.id} data={gym} onClick={() => onSelectGym(gym)} />
+                            ))
+                        ) : (
+                            <div className="text-center py-12 text-gray-500">
+                                <p>条件に一致する施設が見つかりませんでした</p>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div>
@@ -85,4 +125,3 @@ export const ListScreen: React.FC<ListScreenProps> = ({ onBack, onSelectGym }) =
         </div>
     );
 };
-

@@ -7,10 +7,10 @@ import { SearchField } from '@/components/ui/SearchField';
 import { LocationModalContent } from './LocationModalContent';
 import { DateModalContent } from './DateModalContent';
 import { SportModalContent } from './SportModalContent';
-import type { ModalType } from '@/types';
+import type { ModalType, SearchConditions } from '@/types';
 
 interface TopScreenProps {
-  onSearch: () => void;
+  onSearch: (conditions: SearchConditions) => void;
 }
 
 export const TopScreen: React.FC<TopScreenProps> = ({ onSearch }) => {
@@ -19,6 +19,7 @@ export const TopScreen: React.FC<TopScreenProps> = ({ onSearch }) => {
     isOpen: false 
   });
   const [conditions, setConditions] = useState({ area: '', date: '', sport: '' });
+  const [keyword, setKeyword] = useState('');
 
   const openModal = (type: Exclude<ModalType, null>) => setModalState({ type, isOpen: true });
   const closeModal = () => setModalState({ ...modalState, isOpen: false });
@@ -28,6 +29,21 @@ export const TopScreen: React.FC<TopScreenProps> = ({ onSearch }) => {
       setConditions(prev => ({ ...prev, [modalState.type as string]: value }));
     }
     closeModal();
+  };
+
+  const handleSportSelect = (value: string) => {
+    setConditions(prev => ({ ...prev, sport: value }));
+    closeModal();
+  };
+
+  const handleSearch = () => {
+    const searchConditions: SearchConditions = {
+      ...(conditions.area && { area: conditions.area }),
+      ...(conditions.date && { date: conditions.date }),
+      ...(conditions.sport && { sport: conditions.sport }),
+      ...(keyword && { keyword }),
+    };
+    onSearch(searchConditions);
   };
 
   const hasConditions = conditions.area || conditions.date || conditions.sport;
@@ -46,11 +62,12 @@ export const TopScreen: React.FC<TopScreenProps> = ({ onSearch }) => {
         </div>
         <div>
             <p className="text-xs font-bold text-gray-500 mb-2">キーワードから探す</p>
-            <SearchField
+            <input
+                type="text"
                 placeholder="体育館名・競技名など"
-                icon={Search}
-                isReadOnly={false}
-                onClick={() => {}}
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
         </div>
         <div>
@@ -80,10 +97,10 @@ export const TopScreen: React.FC<TopScreenProps> = ({ onSearch }) => {
             </div>
         </div>
         <button
-            onClick={onSearch}
+            onClick={handleSearch}
             className="w-full h-[60px] bg-teal-500 text-white rounded-2xl text-lg font-bold shadow-lg hover:bg-teal-600 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center"
         >
-            検索 {hasConditions ? '(20件)' : ''}
+            検索
         </button>
       </div>
       <Modal 
@@ -105,9 +122,8 @@ export const TopScreen: React.FC<TopScreenProps> = ({ onSearch }) => {
         onClose={closeModal} 
         title="競技を選択"
       >
-        <SportModalContent onSelect={handleSelect} />
+        <SportModalContent onSelect={handleSportSelect} initialValue={conditions.sport} />
       </Modal>
     </div>
   );
 };
-

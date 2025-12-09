@@ -12,34 +12,51 @@ import type { Gym, GymDetail, GymsResponse, CalendarResponse, SearchConditions }
  */
 export async function searchGyms(conditions: SearchConditions): Promise<GymsResponse> {
   try {
+    console.log('🔍 searchGyms called with conditions:', conditions);
+    
     let q: Query = collection(db, 'gyms');
 
     // 検索条件の適用
     if (conditions.area) {
+      console.log('📍 Filtering by area:', conditions.area);
       q = query(q, where('area', '==', conditions.area));
     }
     if (conditions.sport) {
+      console.log('🏃 Filtering by sport:', conditions.sport);
       q = query(q, where('tags', 'array-contains', conditions.sport));
     }
 
+    console.log('📡 Fetching gyms from Firestore...');
     const snapshot = await getDocs(q);
-    const items: Gym[] = snapshot.docs.map(doc => ({
-      id: doc.data().id,
-      name: doc.data().name,
-      distance: doc.data().distance || '距離不明',
-      area: doc.data().area,
-      address: doc.data().address,
-      courts: doc.data().courts || {},
-      tags: doc.data().tags || [],
-      schedule: doc.data().schedule || [],
-    }));
+    console.log('📊 Firestore returned:', snapshot.docs.length, 'documents');
+    
+    const items: Gym[] = snapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log('📄 Document data:', doc.id, data);
+      return {
+        id: data.id,
+        name: data.name,
+        distance: data.distance || '距離不明',
+        area: data.area,
+        address: data.address,
+        tel: data.tel,
+        courts: data.courts || {},
+        tags: data.tags || [],
+        schedule: data.schedule || [],
+        // 詳細情報も含める
+        format: data.format || '',
+        restrictions: data.restrictions || [],
+        parking: data.parking || '',
+      } as any; // GymDetail型として扱う
+    });
 
+    console.log('✅ searchGyms returning:', items.length, 'items');
     return {
       total: items.length,
       items,
     };
   } catch (error) {
-    console.error('Error fetching gyms:', error);
+    console.error('❌ Error fetching gyms:', error);
     return { total: 0, items: [] };
   }
 }

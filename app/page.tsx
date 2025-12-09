@@ -5,12 +5,18 @@ import { BottomNav } from '@/components/ui/BottomNav';
 import { TopScreen } from '@/components/features/TopScreen';
 import { ListScreen } from '@/components/features/ListScreen';
 import { DetailScreen } from '@/components/features/DetailScreen';
-import type { PageType, NavTab, Gym } from '@/types';
+import type { PageType, NavTab, Gym, SearchConditions } from '@/types';
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState<PageType>('top');
   const [activeTab, setActiveTab] = useState<NavTab>('search');
   const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
+  const [searchConditions, setSearchConditions] = useState<SearchConditions>({});
+
+  const handleSearch = (conditions: SearchConditions) => {
+    setSearchConditions(conditions);
+    setCurrentPage('list');
+  };
 
   const handleSelectGym = (gym: Gym) => {
       setSelectedGym(gym);
@@ -21,12 +27,13 @@ export default function Home() {
     <div className="max-w-md mx-auto bg-gray-50 min-h-screen relative font-sans text-gray-900">
       {/* Screen Routing */}
       {currentPage === 'top' && (
-        <TopScreen onSearch={() => setCurrentPage('list')} />
+        <TopScreen onSearch={handleSearch} />
       )}
       {currentPage === 'list' && (
         <ListScreen 
             onBack={() => setCurrentPage('top')} 
             onSelectGym={handleSelectGym}
+            searchConditions={searchConditions}
         />
       )}
       {currentPage === 'detail' && selectedGym && (
@@ -40,4 +47,3 @@ export default function Home() {
     </div>
   );
 }
-

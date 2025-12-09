@@ -1,26 +1,66 @@
 'use client';
 
-import React from 'react';
-import { Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { Activity, Check } from 'lucide-react';
 
 interface SportModalContentProps {
   onSelect: (value: string) => void;
+  initialValue?: string;
 }
 
 const SPORTS = ['バドミントン', '卓球', 'バスケットボール', 'バレーボール', 'フットサル', 'プール'];
 
-export const SportModalContent: React.FC<SportModalContentProps> = ({ onSelect }) => (
-  <div className="grid grid-cols-2 gap-3 pb-2">
-    {SPORTS.map(sport => (
-      <button
-        key={sport}
-        onClick={() => onSelect(sport)}
-        className="flex items-center px-4 py-4 border border-gray-200 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition-colors text-left group"
-      >
-        <Activity size={18} className="text-gray-400 mr-2 group-hover:text-teal-500" />
-        <span className="text-sm font-medium text-gray-700 group-hover:text-teal-600">{sport}</span>
-      </button>
-    ))}
-  </div>
-);
+export const SportModalContent: React.FC<SportModalContentProps> = ({ onSelect, initialValue = '' }) => {
+  const [selectedSports, setSelectedSports] = useState<string[]>(
+    initialValue ? initialValue.split(',').map(s => s.trim()) : []
+  );
 
+  const toggleSport = (sport: string) => {
+    setSelectedSports(prev => 
+      prev.includes(sport) 
+        ? prev.filter(s => s !== sport)
+        : [...prev, sport]
+    );
+  };
+
+  const handleConfirm = () => {
+    onSelect(selectedSports.join(', '));
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        {SPORTS.map(sport => {
+          const isSelected = selectedSports.includes(sport);
+          return (
+            <button
+              key={sport}
+              onClick={() => toggleSport(sport)}
+              className={`flex items-center justify-between px-4 py-4 border rounded-xl transition-all text-left ${
+                isSelected 
+                  ? 'border-teal-500 bg-teal-50' 
+                  : 'border-gray-200 hover:border-teal-300 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center">
+                <Activity size={18} className={`mr-2 ${isSelected ? 'text-teal-500' : 'text-gray-400'}`} />
+                <span className={`text-sm font-medium ${isSelected ? 'text-teal-700' : 'text-gray-700'}`}>
+                  {sport}
+                </span>
+              </div>
+              {isSelected && (
+                <Check size={18} className="text-teal-500" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <button
+        onClick={handleConfirm}
+        className="w-full py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-colors"
+      >
+        決定{selectedSports.length > 0 && ` (${selectedSports.length}件)`}
+      </button>
+    </div>
+  );
+};
