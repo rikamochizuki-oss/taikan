@@ -44,6 +44,24 @@ export const LocationModalContent: React.FC<LocationModalContentProps> = ({ onSe
     }
   };
 
+  const selectAllCitiesInPrefecture = (pref: string) => {
+    const cities = PREFECTURES[pref];
+    const allSelected = cities.every(city => selectedAreas.includes(city));
+    if (allSelected) {
+      // 既に全て選択されている場合は、その都道府県の市町村を全て解除
+      setSelectedAreas(selectedAreas.filter(a => !cities.includes(a)));
+    } else {
+      // 全て選択されていない場合は、その都道府県の市町村を全て選択（重複を除く）
+      const newAreas = [...selectedAreas];
+      cities.forEach(city => {
+        if (!newAreas.includes(city)) {
+          newAreas.push(city);
+        }
+      });
+      setSelectedAreas(newAreas);
+    }
+  };
+
   const toggleStation = (station: string) => {
     if (selectedStations.includes(station)) {
       setSelectedStations(selectedStations.filter(s => s !== station));
@@ -100,6 +118,25 @@ export const LocationModalContent: React.FC<LocationModalContentProps> = ({ onSe
                     </button>
                     {isExpanded && (
                       <div className="p-2 bg-white">
+                        {(() => {
+                          const allSelected = cities.every(city => selectedAreas.includes(city));
+                          return (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                selectAllCitiesInPrefecture(pref);
+                              }}
+                              className={`w-full mb-2 px-3 py-3 rounded-lg text-sm font-medium transition-colors border flex items-center justify-center relative ${
+                                allSelected
+                                  ? 'text-teal-700 bg-teal-50 border-teal-200'
+                                  : 'text-gray-600 bg-white hover:bg-gray-50 border-gray-100'
+                              }`}
+                            >
+                              <span>すべて</span>
+                              {allSelected && <Check size={14} className="text-teal-500 shrink-0 absolute right-3" />}
+                            </button>
+                          );
+                        })()}
                         <div className="grid grid-cols-2 gap-2">
                            {cities.map(city => {
                              const isSelected = selectedAreas.includes(city);
@@ -107,10 +144,10 @@ export const LocationModalContent: React.FC<LocationModalContentProps> = ({ onSe
                                <button
                                  key={city}
                                  onClick={() => toggleArea(city)}
-                                 className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                                 className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all border ${
                                     isSelected 
-                                      ? 'bg-teal-50 text-teal-700 ring-1 ring-teal-200' 
-                                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
+                                      ? 'bg-teal-50 text-teal-700 border-teal-200' 
+                                      : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-100'
                                  }`}
                                >
                                   <span className="truncate">{city}</span>

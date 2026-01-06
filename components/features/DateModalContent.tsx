@@ -50,6 +50,11 @@ export const DateModalContent: React.FC<DateModalContentProps> = ({ onSelect }) 
   
   const weekDays = ['日','月','火','水','木','金','土'];
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [startTime, setStartTime] = useState<string>('指定なし');
+  const [endTime, setEndTime] = useState<string>('指定なし');
+
+  const startTimeOptions = ['指定なし', '9:00', '12:00', '15:00', '18:00', '21:00'];
+  const endTimeOptions = ['指定なし', '9:00', '12:00', '15:00', '18:00', '21:00'];
 
   const toggleDate = (dateStr: string) => {
     if (selectedDates.includes(dateStr)) {
@@ -110,14 +115,24 @@ export const DateModalContent: React.FC<DateModalContentProps> = ({ onSelect }) 
       <div className="mb-6 flex-shrink-0">
         <p className="text-sm font-bold text-gray-800 mb-3">時間帯 (開始 - 終了)</p>
         <div className="flex items-center gap-2 mb-2">
-           <select className="flex-1 p-3 bg-gray-100 rounded-xl text-sm border-none focus:ring-2 focus:ring-teal-500 outline-none">
-             <option>09:00</option>
-             <option>11:00</option>
+           <select 
+             value={startTime}
+             onChange={(e) => setStartTime(e.target.value)}
+             className="flex-1 p-3 bg-gray-100 rounded-xl text-sm border-none focus:ring-2 focus:ring-teal-500 outline-none"
+           >
+             {startTimeOptions.map(option => (
+               <option key={option} value={option}>{option}</option>
+             ))}
            </select>
            <span className="text-gray-400 font-bold">~</span>
-           <select className="flex-1 p-3 bg-gray-100 rounded-xl text-sm border-none focus:ring-2 focus:ring-teal-500 outline-none">
-             <option>21:00</option>
-             <option>19:00</option>
+           <select 
+             value={endTime}
+             onChange={(e) => setEndTime(e.target.value)}
+             className="flex-1 p-3 bg-gray-100 rounded-xl text-sm border-none focus:ring-2 focus:ring-teal-500 outline-none"
+           >
+             {endTimeOptions.map(option => (
+               <option key={option} value={option}>{option}</option>
+             ))}
            </select>
         </div>
       </div>
